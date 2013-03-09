@@ -27,14 +27,14 @@ def c3719():
         data.append(str(temp).lstrip(' ').rstrip(' \n'))
     data = data[1:]
 
-    if not os.path.isfile('3719.json'):
-        f = open('3719.json', 'w')
+    if not os.path.isfile(COURSENAME + '.json'):
+        f = open(COURSENAME + '.json', 'w')
         f.write(json.dumps(data))
         f.close()
 
     newData = json.loads(json.dumps(data))
 
-    f = open('3719.json', 'r')
+    f = open(COURSENAME + '.json', 'r')
     oldData = json.loads(f.read())
     f.close()
 
@@ -44,15 +44,15 @@ def c3719():
         updated = False
 
     if updated:
-        f = open('3719.json', 'w')
+        f = open(COURSENAME + '.json', 'w')
         f.write(json.dumps(data))
         f.close()
 
         payload = {
             'secret': SECRET,
-            'notification[from_screen_name]': '3719',
+            'notification[from_screen_name]': COURSENAME,
             'notification[message]': newData[0],
-            'notification[source_url]': COURSE
+            'notification[source_url]': COURSEURL
         }
         requests.post('http://boxcar.io/devices/providers/' + KEY + '/notifications/broadcast', data=payload)
 
