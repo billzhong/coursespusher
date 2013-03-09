@@ -57,7 +57,7 @@ def c3719():
         requests.post('http://boxcar.io/devices/providers/' + KEY + '/notifications/broadcast', data=payload)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(filename='debug.log', level=logging.DEBUG)
     sched = Scheduler()
     sched.daemonic = False
     sched.add_interval_job(c3719, hours=1)
