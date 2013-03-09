@@ -16,8 +16,9 @@ KEY = 'dXGsO0NnJZsxdZc6R2zN'
 
 def c3719():
 
-    COURSE = 'http://www.cs.mun.ca/~kol/courses/3719-w13/'
-    r = requests.get(COURSE)
+    COURSEURL = 'http://www.cs.mun.ca/~kol/courses/3719-w13/'
+    COURSENAME = '3719'
+    r = requests.get(COURSEURL)
     soup = BeautifulSoup(r.text)
 
     data = []
