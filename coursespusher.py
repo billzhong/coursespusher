@@ -62,3 +62,9 @@ if __name__ == '__main__':
     sched.daemonic = False
     sched.add_interval_job(c3719, hours=1)
     sched.start()
+
+    while True:
+        i = raw_input('Enter "exit" to stop: ')
+        if i == 'exit':
+            sched.shutdown()
+            break
