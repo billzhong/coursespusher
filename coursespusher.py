@@ -43,18 +43,23 @@ def c3719():
     else:
         updated = False
 
+    diffData = []
+    for i in xrange(len(newData) - len(oldData)):
+        diffData.append(newData[i])
+
     if updated:
         f = open(COURSENAME + '.json', 'w')
         f.write(json.dumps(data))
         f.close()
 
-        payload = {
-            'secret': SECRET,
-            'notification[from_screen_name]': COURSENAME,
-            'notification[message]': newData[0],
-            'notification[source_url]': COURSEURL
-        }
-        requests.post('http://boxcar.io/devices/providers/' + KEY + '/notifications/broadcast', data=payload)
+        for i in diffData:
+            payload = {
+                'secret': SECRET,
+                'notification[from_screen_name]': COURSENAME,
+                'notification[message]': i,
+                'notification[source_url]': COURSEURL
+            }
+            requests.post('http://boxcar.io/devices/providers/' + KEY + '/notifications/broadcast', data=payload)
 
 if __name__ == '__main__':
     logging.basicConfig(filename='debug.log', level=logging.DEBUG)
