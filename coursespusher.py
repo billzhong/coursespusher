@@ -32,7 +32,7 @@ def c3719():
         f.write(json.dumps(data))
         f.close()
 
-    newData = json.loads(json.dumps(data))
+    newData = map(unicode, data)
 
     f = open(COURSENAME + '.json', 'r')
     oldData = json.loads(f.read())
