@@ -26,17 +26,14 @@ def c3719():
         temp = re.sub('<[^>]*>', '', str(i))
         data.append(str(temp).lstrip(' ').rstrip(' \n'))
     data = data[1:]
-
-    if not os.path.isfile(COURSENAME + '.json'):
-        f = open(COURSENAME + '.json', 'w')
-        f.write(json.dumps(data))
-        f.close()
-
     newData = map(unicode, data)
 
-    f = open(COURSENAME + '.json', 'r')
-    oldData = json.loads(f.read())
-    f.close()
+    if os.path.isfile(COURSENAME + '.json'):
+        f = open(COURSENAME + '.json', 'r')
+        oldData = json.loads(f.read())
+        f.close()
+    else:
+        oldData = ['']
 
     if newData[0] != oldData[0]:
         updated = True
