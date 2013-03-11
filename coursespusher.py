@@ -45,7 +45,7 @@ def c3719():
 
     diffData = []
     for i in xrange(len(newData) - len(oldData)):
-        diffData.append(newData[i])
+        diffData.insert(0, newData[i])
 
     if updated:
         f = open(COURSENAME + '.json', 'w')
