@@ -44,6 +44,9 @@ def c3719():
     for i in xrange(len(newData) - len(oldData)):
         diffData.insert(0, newData[i])
 
+    if not diffData:
+        diffData.insert(0, newData[0])
+
     if updated:
         f = open(COURSENAME + '.json', 'w')
         f.write(json.dumps(data))
