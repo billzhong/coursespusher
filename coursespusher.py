@@ -10,8 +10,18 @@ from apscheduler.scheduler import Scheduler
 import logging
 
 
-SECRET = 'nE0hFEktDNbSsKhMxdbC0AziXwIm1PQteBSYg4RI'
-KEY = 'dXGsO0NnJZsxdZc6R2zN'
+def push(name, url, data):
+
+    SECRET = 'nE0hFEktDNbSsKhMxdbC0AziXwIm1PQteBSYg4RI'
+    KEY = 'dXGsO0NnJZsxdZc6R2zN'
+    for i in data:
+        payload = {
+            'secret': SECRET,
+            'notification[from_screen_name]': name,
+            'notification[message]': i,
+            'notification[source_url]': url
+        }
+        requests.post('http://boxcar.io/devices/providers/' + KEY + '/notifications/broadcast', data=payload)
 
 
 def c3719():
@@ -33,35 +43,26 @@ def c3719():
         oldData = json.loads(f.read())
         f.close()
     else:
-        oldData = ['']
-
-    if newData[0] != oldData[0]:
-        updated = True
-    else:
-        updated = False
+        oldData = []
 
     diffData = []
-    for i in xrange(len(newData) - len(oldData)):
-        diffData.insert(0, newData[i])
 
-    if not diffData:
-        diffData.insert(0, newData[0])
+    if not oldData:
+        diffData = newData
+    elif newData[0] != oldData[0]:
+        for i in xrange(len(newData) - len(oldData)):
+            diffData.append(newData[i])
 
-    if updated:
-        f = open(COURSENAME + '.json', 'w')
-        f.write(json.dumps(data))
-        f.close()
+    diffData.reverse()
 
-        for i in diffData:
-            payload = {
-                'secret': SECRET,
-                'notification[from_screen_name]': COURSENAME,
-                'notification[message]': i,
-                'notification[source_url]': COURSEURL
-            }
-            requests.post('http://boxcar.io/devices/providers/' + KEY + '/notifications/broadcast', data=payload)
+    f = open(COURSENAME + '.json', 'w')
+    f.write(json.dumps(data))
+    f.close()
+    push(COURSENAME, COURSEURL, diffData)
+
 
 if __name__ == '__main__':
+
     logging.basicConfig(filename='debug.log', level=logging.DEBUG)
     sched = Scheduler()
     sched.daemonic = False
