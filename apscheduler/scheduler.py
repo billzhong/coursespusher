@@ -35,7 +35,7 @@ class Scheduler(object):
     their execution.
     """
 
-    _stopped = False
+    _stopped = True
     _thread = None
 
     def __init__(self, gconfig={}, **options):
@@ -60,6 +60,7 @@ class Scheduler(object):
         self.misfire_grace_time = int(config.pop('misfire_grace_time', 1))
         self.coalesce = asbool(config.pop('coalesce', True))
         self.daemonic = asbool(config.pop('daemonic', True))
+        self.standalone = asbool(config.pop('standalone', False))
 
         # Configure the thread pool
         if 'threadpool' in config:
@@ -85,6 +86,12 @@ class Scheduler(object):
     def start(self):
         """
         Starts the scheduler in a new thread.
+
+        In threaded mode (the default), this method will return immediately
+        after starting the scheduler thread.
+
+        In standalone mode, this method will block until there are no more
+        scheduled jobs.
         """
         if self.running:
             raise SchedulerAlreadyRunningError
@@ -99,11 +106,15 @@ class Scheduler(object):
         del self._pending_jobs[:]
 
         self._stopped = False
-        self._thread = Thread(target=self._main_loop, name='APScheduler')
-        self._thread.setDaemon(self.daemonic)
-        self._thread.start()
+        if self.standalone:
+            self._main_loop()
+        else:
+            self._thread = Thread(target=self._main_loop, name='APScheduler')
+            self._thread.setDaemon(self.daemonic)
+            self._thread.start()
 
-    def shutdown(self, wait=True, shutdown_threadpool=True, close_jobstores=True):
+    def shutdown(self, wait=True, shutdown_threadpool=True,
+                 close_jobstores=True):
         """
         Shuts down the scheduler and terminates the thread.
         Does not interrupt any currently running jobs.
@@ -124,7 +135,8 @@ class Scheduler(object):
             self._threadpool.shutdown(wait)
 
         # Wait until the scheduler thread terminates
-        self._thread.join()
+        if self._thread:
+            self._thread.join()
 
         # Close all job stores
         if close_jobstores:
@@ -133,7 +145,9 @@ class Scheduler(object):
 
     @property
     def running(self):
-        return not self._stopped and self._thread and self._thread.isAlive()
+        thread_alive = self._thread and self._thread.isAlive()
+        standalone = getattr(self, 'standalone', False)
+        return not self._stopped and (standalone or thread_alive)
 
     def add_jobstore(self, jobstore, alias, quiet=False):
         """
@@ -255,6 +269,8 @@ class Scheduler(object):
                 **options):
         """
         Adds the given job to the job list and notifies the scheduler thread.
+        Any extra keyword arguments are passed along to the constructor of the
+        :class:`~apscheduler.job.Job` class (see :ref:`job_options`).
 
         :param trigger: trigger that determines when ``func`` is called
         :param func: callable to run at the given time
@@ -286,6 +302,8 @@ class Scheduler(object):
     def add_date_job(self, func, date, args=None, kwargs=None, **options):
         """
         Schedules a job to be completed on a specific date and time.
+        Any extra keyword arguments are passed along to the constructor of the
+        :class:`~apscheduler.job.Job` class (see :ref:`job_options`).
 
         :param func: callable to run at the given time
         :param date: the date/time to run the job at
@@ -304,6 +322,8 @@ class Scheduler(object):
                          **options):
         """
         Schedules a job to be completed on specified intervals.
+        Any extra keyword arguments are passed along to the constructor of the
+        :class:`~apscheduler.job.Job` class (see :ref:`job_options`).
 
         :param func: callable to run
         :param weeks: number of weeks to wait
@@ -332,6 +352,8 @@ class Scheduler(object):
         """
         Schedules a job to be completed on times that match the given
         expressions.
+        Any extra keyword arguments are passed along to the constructor of the
+        :class:`~apscheduler.job.Job` class (see :ref:`job_options`).
 
         :param func: callable to run
         :param year: year to run on
@@ -362,6 +384,8 @@ class Scheduler(object):
         This decorator does not wrap its host function.
         Unscheduling decorated functions is possible by passing the ``job``
         attribute of the scheduled function to :meth:`unschedule_job`.
+        Any extra keyword arguments are passed along to the constructor of the
+        :class:`~apscheduler.job.Job` class (see :ref:`job_options`).
         """
         def inner(func):
             func.job = self.add_cron_job(func, **options)
@@ -374,6 +398,8 @@ class Scheduler(object):
         This decorator does not wrap its host function.
         Unscheduling decorated functions is possible by passing the ``job``
         attribute of the scheduled function to :meth:`unschedule_job`.
+        Any extra keyword arguments are passed along to the constructor of the
+        :class:`~apscheduler.job.Job` class (see :ref:`job_options`).
         """
         def inner(func):
             func.job = self.add_interval_job(func, **options)
@@ -527,7 +553,8 @@ class Scheduler(object):
                             job.runs += len(run_times)
 
                         # Update the job, but don't keep finished jobs around
-                        if job.compute_next_run_time(now + timedelta(microseconds=1)):
+                        if job.compute_next_run_time(
+                                now + timedelta(microseconds=1)):
                             jobstore.update_job(job)
                         else:
                             self._remove_job(job, alias, jobstore)
@@ -560,10 +587,15 @@ class Scheduler(object):
                 logger.debug('Next wakeup is due at %s (in %f seconds)',
                              next_wakeup_time, wait_seconds)
                 self._wakeup.wait(wait_seconds)
+                self._wakeup.clear()
+            elif self.standalone:
+                logger.debug('No jobs left; shutting down scheduler')
+                self.shutdown()
+                break
             else:
                 logger.debug('No jobs; waiting until a job is added')
                 self._wakeup.wait()
-            self._wakeup.clear()
+                self._wakeup.clear()
 
         logger.info('Scheduler has been shut down')
         self._notify_listeners(SchedulerEvent(EVENT_SCHEDULER_SHUTDOWN))
