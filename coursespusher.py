@@ -28,7 +28,10 @@ def c3719():
 
     COURSEURL = 'http://www.cs.mun.ca/~kol/courses/3719-w13/'
     COURSENAME = '3719'
-    r = requests.get(COURSEURL)
+    try:
+        r = requests.get(COURSEURL)
+    except requests.exceptions.ConnectionError:
+        exit(1)
     soup = BeautifulSoup(r.text)
 
     data = []
