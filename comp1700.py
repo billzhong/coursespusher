@@ -8,9 +8,10 @@ import os
 from boxcar import push
 
 
-def c1700():
+def comp1700():
+
     COURSEURL = 'http://www.cs.mun.ca/courses/cs1700/'
-    COURSENAME = '1700'
+    COURSENAME = 'COMP1700'
     COURSEUSERNAME = 'cs1700'
     COURSEPASSWORD = 'fall13'
     try:

@@ -9,10 +9,10 @@ import os
 from boxcar import push
 
 
-def c3719():
+def comp3719():
 
     COURSEURL = 'http://www.cs.mun.ca/~kol/courses/3719-w13/'
-    COURSENAME = '3719'
+    COURSENAME = 'COMP3719'
     try:
         r = requests.get(COURSEURL)
     except requests.exceptions.ConnectionError:

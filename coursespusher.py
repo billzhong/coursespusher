@@ -3,14 +3,18 @@
 
 from apscheduler.scheduler import Scheduler
 import logging
-from comp3719 import c3719
+# from comp3719 import comp3719
+from comp2500 import comp2500
+from comp1700 import comp1700
 
 
 if __name__ == '__main__':
     logging.basicConfig(filename='debug.log', level=logging.DEBUG)
     sched = Scheduler()
     sched.daemonic = False
-    sched.add_interval_job(c3719, hours=1)
+    # sched.add_interval_job(comp3719, hours=1)
+    sched.add_interval_job(comp2500, hours=2)
+    sched.add_interval_job(comp1700, hours=2)
     sched.start()
 
     while True:
