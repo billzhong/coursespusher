@@ -6,8 +6,8 @@ import requests
 
 def push(name, url, data):
 
-    SECRET = 'nE0hFEktDNbSsKhMxdbC0AziXwIm1PQteBSYg4RI'
-    KEY = 'dXGsO0NnJZsxdZc6R2zN'
+    SECRET = ''
+    KEY = ''
     for i in data:
         payload = {
             'secret': SECRET,
